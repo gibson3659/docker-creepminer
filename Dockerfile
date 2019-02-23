@@ -1,6 +1,9 @@
-FROM ubuntu:16.04
-MAINTAINER Wayne Humphrey <wayne@humphrey.za.net>
+FROM opencl_bionic
+#FROM ubuntu:16.04
+#MAINTAINER Wayne Humphrey <wayne@humphrey.za.net>
 LABEL version="1.4"
+ENV INSTALL_PREFIX /app
+ENV DEBIAN_FRONTEND noninteractive
 
 # Set some env variables as we mostly work in non interactive mode
 RUN echo "export VISIBLE=now" >> /etc/profile
@@ -23,14 +26,12 @@ RUN cd /tmp/ \
   && git clone -b development https://github.com/Creepsky/creepMiner \
   && cd creepMiner \
   && conan install . -s compiler.libcxx=libstdc++11 --build=missing \
-  && cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=RELEASE -DUSE_CUDA=OFF \
-  && make -j$(nproc) \
-  && cp -r resources/public /usr/local/sbin/ \
+  && cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=RELEASE -DUSE_CUDA=OFF -DCMAKE_INSTALL_PREFIX=$INSTALL_PREFIX \
+  && mkdir -p $INSTALL_PREFIX && make -j$(nproc) && make install \
   && cp -r resources/frontail.json /etc/ \
-  && cp -r src/shabal/opencl/mining.cl /usr/local/sbin/ \
-  && cp -r bin/creepMiner /usr/local/sbin/ \
-  && sed -i '2s/creepMiner/creepContainer/' /usr/local/sbin/public/js/general.js \
-  && sed -i '4s/false/true/' /usr/local/sbin/public/js/general.js \
+  && cp -r src/shabal/opencl/mining.cl $INSTALL_PREFIX \
+  && sed -i '2s/creepMiner/creepContainer/' $INSTALL_PREFIX/public/js/general.js \
+  && sed -i '4s/false/true/' $INSTALL_PREFIX/public/js/general.js \
   && mkdir /config && mkdir /logs
 
 
@@ -46,7 +47,7 @@ RUN curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - \
 # Add init and supervisord config
 ADD helper/init /sbin/init
 ADD helper/supervisord.conf /etc/supervisor/supervisord.conf
-ADD helper/mining.conf /usr/local/sbin/mining.conf
+#ADD helper/mining.conf $INSTALL_PREFIX/mining.conf
 RUN chmod 755 /sbin/init
 
 # Add creepUser | creep / M1n3r and set root password
@@ -62,7 +63,7 @@ CMD ["/sbin/init"]
 # Clean up APT when done.
 RUN apt-get autoclean -o Dpkg::Options::="--force-confold" \
   && apt-get autoremove -o Dpkg::Options::="--force-confold"
-#&& apt-get autoremove -o Dpkg::Options::="--force-confold" && apt-get purge -o Dpkg::Options::="--force-confold" apt-utils build-essential cmake \
-#  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get autoremove -o Dpkg::Options::="--force-confold" && apt-get purge -o Dpkg::Options::="--force-confold" apt-utils build-essential cmake \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 #git python-pip python-setuptools python-dev openssl libssl-dev xz-utils curl ca-certificates gnupg2 dirmngr

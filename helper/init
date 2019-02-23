@@ -48,18 +48,18 @@ if [[ -v AUTO_START ]]; then
     echo "[program:creepMiner]" >> /etc/supervisor/supervisord.conf
     if [ -f /config/mining.conf ] ; then
 			echo "=> Using creepMiner custom config"
-			echo "command=/usr/local/sbin/creepMiner --c=/config/mining.conf" >>/etc/supervisor/supervisord.conf
-		    echo "ProgramArgs = [\"/usr/local/sbin/creepMiner\", \"--c=/config/mining.conf\"]" >/etc/webproc.toml
+			echo "command=$INSTALL_PREFIX/run.sh" >>/etc/supervisor/supervisord.conf
+		    echo "ProgramArgs = [\"$INSTALL_PREFIX/run.sh\"]" >/etc/webproc.toml
 	        echo "ConfigurationFiles = [\"/config/mining.conf\"]" >>/etc/webproc.toml
     else
     	echo "=> Using creepMiner default config"
-      	echo "command=/usr/local/sbin/creepMiner --c=/usr/local/sbin/mining.conf" >>/etc/supervisor/supervisord.conf
-      	echo "ProgramArgs = [\"/usr/local/sbin/creepMiner\", \"--c=/usr/local/sbin/mining.conf\"]" >/etc/webproc.toml
-      	echo "ConfigurationFiles = [\"/usr/local/sbin/mining.conf\"]" >>/etc/webproc.toml
+      	echo "command=$INSTALL_PREFIX/run.sh" >>/etc/supervisor/supervisord.conf
+      	echo "ProgramArgs = [\"$INSTALL_PREFIX/run.sh\"]" >/etc/webproc.toml
+      	echo "ConfigurationFiles = [\"$INSTALL_PREFIX/mining.conf\"]" >>/etc/webproc.toml
     fi
     echo "autostart=true" >>/etc/supervisor/supervisord.conf
     echo "autorestart=true" >>/etc/supervisor/supervisord.conf
-    echo "directory=/usr/local/sbin" >>/etc/supervisor/supervisord.conf
+    echo "directory=$INSTALL_PREFIX" >>/etc/supervisor/supervisord.conf
     echo "stdout_logfile=/dev/stdout" >>/etc/supervisor/supervisord.conf
     echo "stdout_logfile_maxbytes=0" >>/etc/supervisor/supervisord.conf
 
